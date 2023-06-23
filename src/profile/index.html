@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.84.0">
+    <title>Profil</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.0/examples/navbar-static/">
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<meta name="theme-color" content="#7952b3">
+
+<style>
+  .bd-placeholder-img {
+    font-size: 1.125rem;
+    text-anchor: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+  }
+
+  @media (min-width: 768px) {
+    .bd-placeholder-img-lg {
+      font-size: 3.5rem;
+    }
+  }
+  
+  /* Show it's not fixed to the top */
+  body {
+    min-height: 75rem;
+  }
+</style>
+
+  </head>
+  <body>
+    
+<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Serverless</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+      <ul class="navbar-nav me-auto mb-2 mb-md-0">
+        <li class="nav-item">
+          <a class="nav-link" aria-current="page" href="/dashboard/index.html">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="/profile/index.html">Profile</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/#logout">Log out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+  <div class="bg-light p-5 rounded" id="profile-container">
+    <h1>Profil</h1>
+    <p id="already-verified" class="d-none">Status: <b class="badge bg-success">Sudah Terverifikasi</b></p>
+    <p class="lead">Email kamu adalah <b id="your-email"></b>.</p>
+  </div>
+  
+  <div class="bg-light p-5 rounded d-none" id="verification-container">
+    <h1>Verifikasi Data Diri</h1>
+    <p id="not-verified">Status: <b class="badge bg-danger">Belum Terverifikasi</b></p>
+    <p class="lead">Sebelum dapat menggunakan aplikasi silahkan verifikasi
+    data diri anda dengan mengupload KTP dan melakukan foto selfie.</p>
+    <form>
+      <legend>Upload KTP <b id="idcard-indicator" class="d-none">( Memproses... )</b></legend>
+      <div class="input-group mb-3">
+        <input type="file" class="form-control" id="idcard" accept=".jpg">
+      </div>
+      <div class="input-group mb-3">
+        <img src="" id="preview-idcard" class="img-fluid">
+      </div>
+    </form>
+    
+    <form id="frm-selfie" class="d-none">
+      <legend>Selfie</legend>
+      <div class="row mb-3">
+        <div class="col">
+          <button class="btn btn-lg btn-primary mb-3" type="button" id="btn-camera">Nyalakan Kamera</button>
+        </div>
+        <div class="col">
+          <div id="my_camera" style="width: 320px; height: 240px; background: black;"></div>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col">
+          <button class="btn btn-lg btn-primary d-none" type="button" id="btn-selfie">Ambil Foto</button>
+        </div>
+        <div class="col">
+          <div style="width:320px; height: 240px; background: gray"><img id="img-selfie" class="d-none"></div>
+        </div>
+      </div>
+    </form>
+    
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js" integrity="sha512-dQIiHSl2hr3NWKKLycPndtpbh5iaHLo6MwrXm7F0FM5e+kL2U16oE9uIwPHUl6fQBeCthiEuV/rzP3MiAB8Vfw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+var $ = function(el) { return document.querySelector(el); };
+var baseApiUrl = '{{BASE_API_URL}}';
+
+function getUploadUrlv2(options, done) {
+  var ajax = new XMLHttpRequest();
+  var url = baseApiUrl + '/signed-url/' + options.email;
+  var data = {
+    filename: options.filename,
+    request_type: options.request_type || 'idcard'
+  };
+  
+  ajax.onload = function(e) {
+    var response = JSON.parse(ajax.responseText);
+    
+    if (done === undefined) { return; }
+    
+    done({
+      blob: options.blob,
+      mime_type: options.mime_type,
+      api: response
+    });
+  };
+  ajax.open('PUT', url);
+  ajax.setRequestHeader('Content-Type', 'application/json');
+  ajax.send(JSON.stringify(data));  
+}
+
+function uploadPhoto(options, done) {
+  var ajax = new XMLHttpRequest();
+  var url = options.api.upload_url;
+  var data = options.blob;
+  
+  ajax.onload = function(e) {
+    console.log('S3 Response =>', ajax.responseText);
+    
+    if (done === undefined) { return; }
+    done();
+  };
+  
+  ajax.open('PUT', url);
+  ajax.setRequestHeader('Content-Type', options.mime_type);
+  ajax.send(data);  
+}
+
+function startCamera(e) {
+  Webcam.set({
+    width: '320',
+    height: '240',
+    image_format: 'jpeg',
+    jpeg_quality: 90
+  });
+  Webcam.attach('#my_camera');
+  
+  $('#btn-selfie').classList.remove('d-none');
+}
+
+function takeSelfie(e) {
+  var email = window.localStorage.getItem('email');
+  $('#btn-selfie').disabled = true;
+  $('#btn-selfie').innerHTML = 'Memproses...';
+  
+  Webcam.snap( function(dataUri) {
+    $('#img-selfie').src = dataUri;
+    $('#img-selfie').classList.remove('d-none');
+    
+    var checkProfileAfterPhotoUploaded = function() {
+      callProfileApi(email, function(profile) {
+        if (profile.verified === false) {
+          alert('KTP dan foto selfie tidak cocok, coba lagi.');
+          $('#btn-selfie').disabled = false;
+          $('#btn-selfie').innerHTML = 'Ambil Foto';
+          return;
+        }
+        
+        window.location.href = window.location.href;
+      });
+    };
+    
+    var afterUploadPhoto = function() {
+      window.setTimeout(checkProfileAfterPhotoUploaded, 2000);
+    };
+    
+    var afterUploadUrl = function(response) {
+      uploadPhoto(response, afterUploadPhoto);
+    };
+    
+    var optionsUploadUrl = {
+      email: email,
+      filename: 'selfie.jpg',
+      mime_type: 'image/jpeg',
+      request_type: 'selfie',
+      blob: dataToArrayBuffer(dataUri)
+    };
+    getUploadUrlv2(optionsUploadUrl, afterUploadUrl);
+  });
+}
+
+function dataToArrayBuffer(data) {
+  var binary = atob(data.split(',')[1]);
+  var content = [];
+  for (var i=0; i<binary.length; i++) {
+    content.push(binary.charCodeAt(i));
+  }
+  var blob = new Blob([new Uint8Array(content)], {type: 'image/jpeg'});
+  return blob;
+}
+
+$('#idcard').onchange = function(e) {
+  if (!this.files) { return; }
+  if (!this.files[0]) { return; }
+  
+  var reader = new FileReader();
+  reader.onload = function(e2) {
+    $('#idcard-indicator').classList.remove('d-none');
+    $('#preview-idcard').src = e2.target.result;
+  };
+  reader.readAsDataURL(this.files[0]);
+  
+  var blobReader = new FileReader();
+  blobReader.onload = (e2) => {
+    var email = window.localStorage.getItem('email');
+    var optionsUploadUrl = {
+      email: email,
+      filename: this.files[0].name,
+      mime_type: this.files[0].type,
+      request_type: 'idcard',
+      blob: e2.target.result
+    };
+    
+    var afterUploadPhoto = function() {
+      $('#frm-selfie').classList.remove('d-none');
+      $('#idcard-indicator').classList.add('d-none');
+    };
+    
+    var afterUploadUrl = function(response) {
+      uploadPhoto(response, afterUploadPhoto);
+    };
+    
+    getUploadUrlv2(optionsUploadUrl, afterUploadUrl);
+  };
+  blobReader.readAsArrayBuffer(this.files[0]);
+};
+
+function callProfileApi(email, done) {
+  var ajax = new XMLHttpRequest();
+  var url = baseApiUrl + '/profile/' + email;
+  
+  ajax.onload = function(e) {
+    var response = JSON.parse(ajax.responseText);
+    if (response.hasOwnProperty('profile') === true) {
+      done(response.profile);
+    }
+  };
+  ajax.open('GET', url);
+  ajax.setRequestHeader('Content-Type', 'application/json');
+  ajax.send();  
+}
+
+function initElements(profile) {
+  if (profile.verified === false) {
+    $('#verification-container').classList.remove('d-none');
+    $('#not-verified').classList.remove('d-none');
+    $('#profile-container').classList.add('d-none');
+    
+    return;
+  }
+  
+  $('#profile-container').classList.remove('d-none');
+  $('#already-verified').classList.remove('d-none');
+}
+
+window.addEventListener('DOMContentLoaded', function(evt) {
+  $('#btn-camera').onclick = startCamera;
+  $('#btn-selfie').onclick = takeSelfie;
+  
+  var email = window.localStorage.getItem('email');
+  $('#your-email').innerText = email;
+  
+  callProfileApi(email, initElements);
+});
+</script>
+  </body>
+</html>
+

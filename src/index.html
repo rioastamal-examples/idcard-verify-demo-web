@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <title>Sign In</title>
+<meta name="theme-color" content="#7952b3">
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+    </style>
+    <style>
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  padding-top: 40px;
+  padding-bottom: 40px;
+  background-color: #f5f5f5;
+}
+
+.form-signin {
+  width: 100%;
+  max-width: 330px;
+  padding: 15px;
+  margin: auto;
+}
+
+.form-signin .checkbox {
+  font-weight: 400;
+}
+
+.form-signin .form-floating:focus-within {
+  z-index: 2;
+}
+
+.form-signin input[type="email"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+    </style>
+  </head>
+<main class="form-signin">
+  <form>
+    <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
+
+    <div class="form-floating">
+      <input type="email" class="form-control" id="email" placeholder="name@example.com" required autocomplete="off">
+      <label for="floatingInput">Email address</label>
+    </div>
+    <div class="form-floating">
+      <input type="password" class="form-control" id="password" placeholder="Password" required>
+      <label for="floatingPassword">Password</label>
+    </div>
+
+    <div class="checkbox mb-3">
+      <label>
+        <em>Gunakan email dan password apapun, login akan selalu sukses.</em>
+      </label>
+    </div>
+    <button class="w-100 btn btn-lg btn-primary" type="submit" id="btn-signin">Sign in</button>
+    <p class="mt-5 mb-3 text-muted">&copy; 2022 Serverless Demo by <a href="https://rioastamal.net">Rio Astamal</a></p>
+  </form>
+</main>
+<script>
+var $ = function(el) { return document.querySelector(el); };
+var baseApiUrl = '{{BASE_API_URL}}';
+
+function callLoginApi(email) {
+  var ajax = new XMLHttpRequest();
+  var url = baseApiUrl + '/auth';
+  var data = {
+    email: email
+  };
+  
+  ajax.onload = function(e) {
+    var response = JSON.parse(ajax.responseText);
+    if (response.logged_in === true) {
+      window.localStorage.setItem('email', email);
+      window.localStorage.setItem('logged_in', true);
+      
+      window.setTimeout(() => {
+        window.location.href = 'dashboard/index.html';
+      }, 1000);
+    }
+  };
+  ajax.open('POST', url);
+  ajax.setRequestHeader('Content-Type', 'application/json');
+  ajax.send(JSON.stringify(data));
+}
+
+document.forms[0].onsubmit = function(e) {
+  e.preventDefault();
+  
+  var email = $('#email').value;
+  callLoginApi(email);
+  
+  return false;
+};
+
+window.addEventListener('DOMContentLoaded', function(e) {
+  if (window.location.hash.indexOf('logout') !== -1) {
+    window.localStorage.clear();
+    return;
+  }
+  
+  var currentEmail = window.localStorage.getItem('email');
+  if (currentEmail !== null) {
+    window.location.href = 'dashboard/index.html';
+    return;
+  }
+});
+</script>
+  </body>
+</html>

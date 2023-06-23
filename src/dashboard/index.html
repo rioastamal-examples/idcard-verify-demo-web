@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.84.0">
+    <title>Dashboard</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.0/examples/navbar-static/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<meta name="theme-color" content="#7952b3">
+
+<style>
+  .bd-placeholder-img {
+    font-size: 1.125rem;
+    text-anchor: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+  }
+
+  @media (min-width: 768px) {
+    .bd-placeholder-img-lg {
+      font-size: 3.5rem;
+    }
+  }
+  
+  /* Show it's not fixed to the top */
+  body {
+    min-height: 75rem;
+  }
+</style>
+
+  </head>
+  <body>
+    
+<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Serverless</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+      <ul class="navbar-nav me-auto mb-2 mb-md-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="/dashboard/index.html">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/profile/index.html">Profile</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/#logout">Log out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+  <div class="bg-light p-5 rounded">
+    <h1>Serverless Demo</h1>
+    <p id="not-verified" class="d-none">Status: <b class="badge bg-danger">Belum Terverifikasi</b></p>
+    <p id="already-verified" class="d-none">Status: <b class="badge bg-success">Sudah Terverifikasi</b></p>
+    
+    <p class="lead">Halaman ini dihosting menggunakan AWS Amplify
+    sehingga memiliki skalabilitas dan performa yang tinggi.</p>
+    <a id="btn-verify" class="btn btn-lg btn-primary d-none" href="/profile/index.html" role="button">Verifikasi data diri</a>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<script>
+var $ = function(el) { return document.querySelector(el); };
+var baseApiUrl = '{{BASE_API_URL}}';
+
+function callProfileApi(email, done) {
+  var ajax = new XMLHttpRequest();
+  var url = baseApiUrl + '/profile/' + email;
+  
+  ajax.onload = function(e) {
+    var response = JSON.parse(ajax.responseText);
+    if (response.hasOwnProperty('profile') === true) {
+      done(response.profile);
+    }
+  };
+  ajax.open('GET', url);
+  ajax.setRequestHeader('Content-Type', 'application/json');
+  ajax.send();  
+}
+
+function initElements(profile) {
+  if (profile.verified === false) {
+    $('#btn-verify').classList.remove('d-none');
+    $('#not-verified').classList.remove('d-none');
+    
+    return;
+  }
+  
+  $('#already-verified').classList.remove('d-none');  
+}
+
+window.addEventListener('DOMContentLoaded', function(e) {
+  var email = window.localStorage.getItem('email');
+  callProfileApi(email, // then =>
+  initElements
+  );
+});
+</script>
+  </body>
+</html>
